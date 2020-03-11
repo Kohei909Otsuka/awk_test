@@ -1,64 +1,25 @@
-# task
+# todo
 
-# 1. utf8に変える
+- (大)複数配送に対応
+- (小)head行の動的な取得(104固定にしてる)
+- (小)枝番号と商品コードのindexの動的な取得(6,97に固定している)
+- (小)shift-jisに戻す
 
-# 2. 枝番号1の直上に空白行を追加する
+# main
 
-simple版
-
-```
-BEGIN {
-  FS = ",";
-}
-
-$6 == 1 {
-  print ""
-}
-
-{
-  print $5, $6
-}
-```
-
-完全版
+orders.csvをshift jis形式でサブスクから出力されたデフォルト形式のcsvとする
 
 ```
-BEGIN {
-  FS = ",";
-}
-
-$6 == 1 {
-  print ""
-}
-
-{
-  print $0
-}
+nkf -w orders.csv |\
+awk -f add_new_line.awk |\
+awk -f split_by_blank_line.awk |\
+sed -e '1d' |\
+awk -f format.awk > result.csv
 ```
 
-# 3. 空白行を目印に、recordを作る
+# detail
 
-```
-BEGIN {
-  RS = ""
-  FS = ","
-  OFS = ","
-}
-
-# NR != 1 {
-#   print $1
-# }
-
-# cycleがいくなのかを取得する必要があるな
-
-{
-  # print $0だと別れてしまう
-  # 改行が入っているのかな？ => Yes gsubしたら消えた
-  # headerが104個なので、105番目は枝番2になっている
-  # print $1,$104, $105,$208, $209,$312, $313,$416, $417,$520, $521,$624, $625,$728
-  gsub(/\n/, "", $0)
-  print $0
-}
-```
-
-# 注文を表現するrecordに対して、商品明細のみloopしてprintする
+1. utf8に変える
+2. 枝番号1の直上に空白行を追加する(add_new_line.awk)
+3. 空白行を目印に、recordを作る(split_by_blank_line.awk)
+4. 注文を表現するrecordに対して、商品明細のみloopしてprintしてから送料などを表示する
